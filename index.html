@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Career Advisor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0b0f1a; --surface: #131929; --card: #1a2236;
+      --border: #2a3550; --accent: #4f8ef7; --accent2: #a78bfa;
+      --text: #e8edf5; --muted: #7a8aaa; --radius: 14px;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; padding: 24px 16px 60px; }
+    header { text-align: center; margin-bottom: 28px; }
+    .badge { display: inline-block; background: linear-gradient(135deg, #4f8ef722, #a78bfa22); border: 1px solid var(--border); border-radius: 99px; padding: 6px 18px; font-size: 12px; font-weight: 600; color: var(--accent2); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+    h1 { font-family: 'Space Grotesk', sans-serif; font-size: clamp(26px, 5vw, 40px); font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; }
+    .subtitle { color: var(--muted); font-size: 14px; }
+    .api-box { max-width: 660px; margin: 0 auto 18px; background: #1a2236; border: 1px solid #4f8ef755; border-radius: var(--radius); padding: 16px 20px; }
+    .api-box .alabel { font-size: 13px; color: var(--muted); display: block; margin-bottom: 8px; }
+    .api-row { display: flex; gap: 8px; }
+    .api-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; outline: none; }
+    .api-row input:focus { border-color: var(--accent); }
+    .save-btn { background: var(--accent); border: none; border-radius: 10px; color: #fff; padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .api-hint { font-size: 11px; color: var(--muted); margin-top: 7px; }
+    .saved-tag { font-size: 12px; color: #34d399; margin-top: 6px; display: none; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; max-width: 660px; margin: 0 auto 16px; }
+    .section-label { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+    .field-group { display: flex; flex-direction: column; gap: 12px; }
+    label { font-size: 13px; color: var(--muted); margin-bottom: 5px; display: block; }
+    input, textarea, select { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; resize: none; }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    select option { background: var(--surface); }
+    .chip-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .chip { background: var(--surface); border: 1px solid var(--border); border-radius: 99px; padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--muted); transition: all 0.15s; user-select: none; }
+    .chip.active { background: linear-gradient(135deg, #4f8ef722, #a78bfa22); border-color: var(--accent); color: var(--accent); }
+    .btn { width: 100%; max-width: 660px; margin: 0 auto; display: block; padding: 15px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: var(--radius); color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    #result-section { display: none; max-width: 660px; margin: 20px auto 0; }
+    .result-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .result-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .result-title { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700; }
+    .result-body { font-size: 14px; line-height: 1.85; color: #c8d4e8; white-space: pre-wrap; }
+    .result-body strong { color: var(--accent); }
+    .loader { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; padding: 20px 0; justify-content: center; }
+    .dot-pulse { display: flex; gap: 5px; }
+    .dot-pulse span { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; animation: pulse 1.2s infinite ease-in-out; }
+    .dot-pulse span:nth-child(2) { animation-delay: 0.2s; }
+    .dot-pulse span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse { 0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1);opacity:1} }
+    .error-msg { color: #f87171; font-size: 13px; text-align: center; padding: 10px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">✨ AI Powered</div>
+  <h1>Career Advisor</h1>
+  <p class="subtitle">Tell me about yourself — I'll find your perfect IT career path 🚀</p>
+</header>
+
+<div class="api-box">
+  <span class="alabel">🔑 Gemini API Key</span>
+  <div class="api-row">
+    <input type="password" id="apikey" placeholder="Paste your Gemini API key here..." />
+    <button class="save-btn" onclick="saveKey()">Save</button>
+  </div>
+  <p class="api-hint">Free key from aistudio.google.com — used only in your browser, never stored anywhere else.</p>
+  <p class="saved-tag" id="saved-tag">✅ API Key saved!</p>
+</div>
+
+<div class="card">
+  <div class="section-label">👤 About You</div>
+  <div class="field-group">
+    <div><label>Your Name</label><input type="text" id="name" placeholder="e.g. Yalu" /></div>
+    <div>
+      <label>Current Year of Study</label>
+      <select id="year">
+        <option value="">Select year...</option>
+        <option>1st Year</option><option>2nd Year</option>
+        <option selected>3rd Year</option><option>Final Year</option><option>Graduated</option>
+      </select>
+    </div>
+    <div><label>Branch / Department</label><input type="text" id="branch" placeholder="e.g. Information Technology" /></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-label">💡 Your Interests</div>
+  <label>Select all that apply</label>
+  <div class="chip-group" id="interests">
+    <div class="chip" onclick="toggleChip(this)">Web Development</div>
+    <div class="chip" onclick="toggleChip(this)">AI / Machine Learning</div>
+    <div class="chip" onclick="toggleChip(this)">Cybersecurity</div>
+    <div class="chip" onclick="toggleChip(this)">Cloud Computing</div>
+    <div class="chip" onclick="toggleChip(this)">Mobile Apps</div>
+    <div class="chip" onclick="toggleChip(this)">Data Science</div>
+    <div class="chip" onclick="toggleChip(this)">DevOps</div>
+    <div class="chip" onclick="toggleChip(this)">Networking</div>
+    <div class="chip" onclick="toggleChip(this)">UI/UX Design</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-label">🛠️ Your Current Skills</div>
+  <label>Select what you know (even basics count!)</label>
+  <div class="chip-group" id="skills">
+    <div class="chip" onclick="toggleChip(this)">Java</div>
+    <div class="chip" onclick="toggleChip(this)">Python</div>
+    <div class="chip" onclick="toggleChip(this)">HTML / CSS</div>
+    <div class="chip" onclick="toggleChip(this)">JavaScript</div>
+    <div class="chip" onclick="toggleChip(this)">SQL</div>
+    <div class="chip" onclick="toggleChip(this)">C / C++</div>
+    <div class="chip" onclick="toggleChip(this)">Git / GitHub</div>
+    <div class="chip" onclick="toggleChip(this)">Linux</div>
+    <div class="chip" onclick="toggleChip(this)">React</div>
+    <div class="chip" onclick="toggleChip(this)">None yet</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-label">🎯 Your Goal</div>
+  <div class="field-group">
+    <div>
+      <label>Dream outcome</label>
+      <select id="goal">
+        <option value="">Select your goal...</option>
+        <option>Get placed in a top IT company (TCS, Infosys, etc.)</option>
+        <option>Join a startup</option>
+        <option>Work abroad (US/UK/Canada)</option>
+        <option>Build my own startup</option>
+        <option>Do higher studies (MS/MBA)</option>
+        <option>Freelancing</option>
+      </select>
+    </div>
+    <div>
+      <label>Anything else? (optional)</label>
+      <textarea id="extra" rows="3" placeholder="e.g. I have 1 month before final year, want to be placement ready..."></textarea>
+    </div>
+  </div>
+</div>
+
+<button class="btn" onclick="getAdvice()" id="submitBtn">🤖 Get My Career Roadmap</button>
+
+<div id="result-section">
+  <div class="result-card">
+    <div class="result-header">
+      <div class="result-icon">🎯</div>
+      <div>
+        <div class="result-title" id="result-name">Your Personalized Roadmap</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Powered by Gemini AI</div>
+      </div>
+    </div>
+    <div id="result-body" class="result-body"></div>
+  </div>
+</div>
+
+<script>
+  let savedKey = '';
+
+  function saveKey() {
+    const k = document.getElementById('apikey').value.trim();
+    if (!k) { alert('Please paste your API key first!'); return; }
+    savedKey = k;
+    document.getElementById('saved-tag').style.display = 'block';
+    document.getElementById('apikey').value = '••••••••••••••••••••';
+  }
+
+  function toggleChip(el) { el.classList.toggle('active'); }
+
+  function getSelected(id) {
+    return [...document.querySelectorAll('#' + id + ' .chip.active')].map(c => c.textContent.trim());
+  }
+
+  function formatResult(text) {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^#{1,3} (.+)/gm, '<strong style="color:var(--accent2);font-size:15px;">$1</strong>')
+      .replace(/^- (.+)/gm, '• $1');
+  }
+
+  async function getAdvice() {
+    const apiKey = savedKey || document.getElementById('apikey').value.trim();
+    if (!apiKey || apiKey.includes('•')) { alert('Please enter and save your Gemini API key first! 🔑'); return; }
+
+    const name = document.getElementById('name').value.trim() || 'Student';
+    const year = document.getElementById('year').value;
+    const branch = document.getElementById('branch').value.trim();
+    const goal = document.getElementById('goal').value;
+    const extra = document.getElementById('extra').value.trim();
+    const interests = getSelected('interests');
+    const skills = getSelected('skills');
+
+    if (!year || !branch || !goal || interests.length === 0) {
+      alert('Please fill all fields and select at least one interest! 😊'); return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = '⏳ Analyzing...';
+
+    const resultSection = document.getElementById('result-section');
+    resultSection.style.display = 'block';
+    document.getElementById('result-name').textContent = name + "'s Career Roadmap";
+    document.getElementById('result-body').innerHTML = `<div class="loader"><div class="dot-pulse"><span></span><span></span><span></span></div>Building your personalized roadmap...</div>`;
+    resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const prompt = `You are a friendly IT career advisor in India. Student profile:
+Name: ${name} | Year: ${year} | Branch: ${branch}
+Interests: ${interests.join(', ')}
+Skills: ${skills.length ? skills.join(', ') : 'None yet'}
+Goal: ${goal}
+Extra: ${extra || 'None'}
+
+Give a warm, personalized career roadmap with:
+1. **Best Career Path** (1-2 roles that fit perfectly)
+2. **Why this suits them**
+3. **3-Month Action Plan** (step by step)
+4. **Top Skills to Build**
+5. **Certifications to Get** (free/affordable)
+6. **Salary Expectation** (India fresher range)
+7. **Motivational Closing**
+Be concise, friendly, use emojis. Talk like a helpful senior friend.`;
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+          })
+        }
+      );
+      const data = await response.json();
+      if (data.error) throw new Error(data.error.message);
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
+      document.getElementById('result-body').innerHTML = formatResult(text);
+    } catch (err) {
+      document.getElementById('result-body').innerHTML = `<div class="error-msg">⚠️ Error: ${err.message}</div>`;
+    }
+
+    btn.disabled = false;
+    btn.textContent = '🔄 Get New Roadmap';
+  }
+</script>
+</body>
+</html>
